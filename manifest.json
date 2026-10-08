@@ -1,6 +1,7 @@
 {
   "name": "Min styrketrening",
   "short_name": "Styrketrening",
+  "id": "/Styrketrening-12-uker/",
   "description": "12 ukers styrketrening hjemme",
   "start_url": "/Styrketrening-12-uker/", 
   "scope": "/Styrketrening-12-uker/",
