@@ -16,19 +16,50 @@ const phasesExtra={
 4:{A:[['Bekkenløft',3,'8–10'],['Rumensk markløft',3,'8'],['Goblet squat',3,'8–10'],['Brystpress med manualer',3,'8–10'],['Enarms roing',3,'10 per side'],['Dead bug',2,'8 per side']]}
 };
 function phaseNo(w){return w<=3?1:w<=6?2:w<=9?3:4}
-function makeSession(letter,w){let p=phaseNo(w), rows=(phasesExtra[p]?.[letter]||base[letter]).map((x,i)=>({n:x[0],sets:x[1],reps:x[2],area:(base[letter][i]||[])[3]||'helkropp'}));
- if(p>=2 && letter==='B' && w>=4){rows[0]={n:'Goblet squat',sets:3,reps:w>=7?'8–10':'10',area:'lår/rumpe'};}
- if(p>=3 && letter==='C'){rows[0]={n:'Bekkenløft',sets:3,reps:'8–10',area:'rumpe/hofte'};}
- return rows}
+function makeSession(letter,w){
+ if(w<4){let p=phaseNo(w),rows=(phasesExtra[p]?.[letter]||base[letter]).map((x,i)=>({n:x[0],sets:x[1],reps:x[2],area:(base[letter][i]||[])[3]||'helkropp'}));return rows;}
+ // Oppdatert hjemmeprogram fra uke 4: manualer, stang og benk.
+ const plans={
+ A:[
+  ['Bulgarske utfall',3,'8 per bein','lår/rumpe'],
+  ['Bekkenløft',3,'10–12','rumpe/hofte'],
+  ['Enarms roing',3,'10 per side','rygg'],
+  ['Skulderpress',2,'10','skuldre'],
+  ['Dead bug',3,'8 per side','mage/kjerne'],
+  ['Reverse crunch',3,'12','mage'],
+  ['Bird dog',2,'10 per side','kjerne']
+ ],
+ B:[
+  ['Benkpress med stang',3,'8–10','bryst/triceps'],
+  ['Roing med stang',3,'8–10','rygg'],
+  ['Goblet squat',3,'10','lår/rumpe'],
+  ['Bicepscurl',2,'10–12','armer'],
+  ['Tricepspress med manual',2,'10–12','armer'],
+  ['Sideplanke',3,'20–30 sek per side','mage/skrå mage'],
+  ['Crunch',3,'12–15','mage']
+ ],
+ C:[
+  ['Bulgarske utfall',3,'8 per bein','lår/rumpe'],
+  ['Bekkenløft',3,'12','rumpe/hofte'],
+  ['Benkpress med stang',3,'8–10','bryst/triceps'],
+  ['Enarms roing',3,'10 per side','rygg'],
+  ['Sidehev',2,'12','skuldre'],
+  ['Dead bug',3,'8 per side','mage/kjerne'],
+  ['Reverse crunch',3,'12','mage'],
+  ['Bird dog',2,'10 per side','kjerne']
+ ]
+ };
+ return plans[letter].map(([n,sets,reps,area])=>({n,sets,reps,area}));
+}
 const key='strengthAppV2';
 let state=JSON.parse(localStorage.getItem(key)||'null')||{week:1,session:0,completed:{},weights:{},setChecks:{},pain:{}};
 function save(){localStorage.setItem(key,JSON.stringify(state))}
 function currentLetter(){return ['A','B','C'][state.session]}
 function lastWeight(n){return state.weights[n]??''}
 function renderHome(){let done=Object.keys(state.completed).length,total=36,p=phases[phaseNo(state.week)-1];document.getElementById('app').innerHTML=`<div class="card hero"><div class="muted">UKE ${state.week} · ØKT ${state.session+1} (${currentLetter()})</div><h2>${p.name}</h2><p>${p.note}</p><div class="bar"><div style="width:${Math.min(100,done/36*100)}%"></div></div><p class="small">${done} av 36 økter fullført</p><button class="button" onclick="renderSession()">▶ Start neste økt</button></div><div class="grid"><button class="button secondary" onclick="showProgress()">📈 Min fremgang</button><button class="button secondary" onclick="showWeeks()">📅 12 uker</button></div><div class="card"><b>Ingen faste dager</b><p class="muted">Du tar neste økt når det passer. Hvis det går flere dager mellom øktene, står du fortsatt på samme sted.</p><div class="warning">Hvis en øvelse gir tydelig eller økende smerte, stopp eller tilpass. Appen erstatter ikke legens eller fysioterapeutens oppfølging.</div></div>`}
-function renderSession(){let arr=makeSession(currentLetter(),state.week);document.getElementById('app').innerHTML=`<div class="card"><div class="muted">UKE ${state.week} · ØKT ${state.session+1} (${currentLetter()})</div><h2>${phases[phaseNo(state.week)-1].name}</h2><p>Ca. 20–30 minutter. Første gang med en øvelse: bruk instruksjonen før du starter.</p></div>${arr.map((e,i)=>exerciseCard(e,i)).join('')}<div class="card"><b>Hvordan kjennes kroppen i dag?</b><div class="painrow">${['🟢 Greit','🟡 Litt vondt','🔴 Mye vondt'].map((x,i)=>`<button class="pain ${state.pain[`${state.week}-${state.session}`]===i?'selected':''}" onclick="setPain(${i})">${x}</button>`).join('')}</div></div><button class="button donebtn" onclick="finishSession()">✅ Fullfør økten</button><button class="button secondary donebtn" onclick="renderHome()">← Tilbake</button>`}
+function renderSession(){let arr=makeSession(currentLetter(),state.week);document.getElementById('app').innerHTML=`<div class="card"><div class="muted">UKE ${state.week} · ØKT ${state.session+1} (${currentLetter()})</div><h2>${phases[phaseNo(state.week)-1].name}</h2><p>Ca. 40–45 minutter inkludert oppvarming. Ta 60–90 sekunders pause mellom settene, og litt lengre ved benkpress og bulgarske utfall.</p></div>${arr.map((e,i)=>exerciseCard(e,i)).join('')}<div class="card"><b>Hvordan kjennes kroppen i dag?</b><div class="painrow">${['🟢 Greit','🟡 Litt vondt','🔴 Mye vondt'].map((x,i)=>`<button class="pain ${state.pain[`${state.week}-${state.session}`]===i?'selected':''}" onclick="setPain(${i})">${x}</button>`).join('')}</div></div><button class="button donebtn" onclick="finishSession()">✅ Fullfør økten</button><button class="button secondary donebtn" onclick="renderHome()">← Tilbake</button>`}
 const tips={
-'Bekkenløft':'Ligg på ryggen med bøyde knær. Press føttene i gulvet, løft bekkenet og spenn rumpa på toppen. Senk rolig. Hold magen lett aktiv og unngå å overdrive svai.','Rumensk markløft':'Hold vekten nær kroppen. Litt bøy i knærne, skyv rumpa bakover og senk til du kjenner arbeid i bakside lår og sete. Reis deg ved å føre hoftene frem.','Goblet squat':'Hold én manual foran brystet. Sett deg rolig ned mellom hoftene og reis deg kontrollert. Hold knærne i samme retning som tærne.','Step-up på benk':'Start uten vekt. Sett hele foten på benken og press deg rolig opp. Senk kontrollert. Bruk en lav og stabil benk.','Enarms roing':'Støtt én hånd på benken. Trekk manualen mot siden av kroppen uten å rotere overkroppen. Senk rolig.','Roing med stang':'Len deg frem med stabil rygg og trekk stangen mot magen. Senk kontrollert. Velg en lett vekt til teknikken sitter.','Brystpress med manualer':'Ligg stødig på benken. Senk manualene kontrollert mot siden av brystet og press dem opp igjen.','Skulderpress':'Sitt eller stå stødig. Start med manualene ved skuldrene og press opp uten å svaie i ryggen.','Bicepscurl':'Hold albuene nær kroppen. Bøy armene rolig opp og senk kontrollert uten å svinge.','Tricepspress med manual':'Hold én manual med begge hender. Bøy albuene og senk vekten bak hodet, press opp igjen. Stopp hvis skulderen blir irritert.','Sidehev':'Bruk lette manualer. Løft armene kontrollert ut til siden til omtrent skulderhøyde.','Dead bug':'Ligg på ryggen. Hold magen stabil og før motsatt arm og bein rolig ut. Beveg bare så langt korsryggen kan holdes stabil.','Sideplanke':'Støtt deg på underarm og knær eller føtter. Hold kroppen i en rett linje og spenn magen lett.'};
+'Bulgarske utfall':'Stå med ryggen mot en lav, stabil benk. Legg vristen på benken, ta et passe langt steg frem og senk kroppen kontrollert. Start uten vekter. Hold balansen og gjør like mange repetisjoner på hvert bein.','Benkpress med stang':'Ligg med øynene omtrent under stangen og føttene stødig i gulvet. Grip litt bredere enn skulderbredde. Løft stangen ut fra stativet, senk kontrollert mot midtre/nedre del av brystet og press opp. Bruk sikkerhetsarmer eller en treningspartner, og ikke tren alene uten trygg sikring.','Reverse crunch':'Ligg på ryggen med knærne bøyd. Bruk magen til å rulle bekkenet rolig opp fra gulvet, uten å svinge beina. Senk kontrollert.','Bird dog':'Stå på alle fire. Strekk motsatt arm og bein rolig ut, hold hoftene stabile og før tilbake. Bytt side.','Crunch':'Ligg på ryggen med bøyde knær. Løft skulderbladene litt fra gulvet ved å stramme magen. Senk rolig; unngå å dra i nakken.','Bekkenløft':'Ligg på ryggen med bøyde knær. Press føttene i gulvet, løft bekkenet og spenn rumpa på toppen. Senk rolig. Hold magen lett aktiv og unngå å overdrive svai.','Rumensk markløft':'Hold vekten nær kroppen. Litt bøy i knærne, skyv rumpa bakover og senk til du kjenner arbeid i bakside lår og sete. Reis deg ved å føre hoftene frem.','Goblet squat':'Hold én manual foran brystet. Sett deg rolig ned mellom hoftene og reis deg kontrollert. Hold knærne i samme retning som tærne.','Step-up på benk':'Start uten vekt. Sett hele foten på benken og press deg rolig opp. Senk kontrollert. Bruk en lav og stabil benk.','Enarms roing':'Støtt én hånd på benken. Trekk manualen mot siden av kroppen uten å rotere overkroppen. Senk rolig.','Roing med stang':'Len deg frem med stabil rygg og trekk stangen mot magen. Senk kontrollert. Velg en lett vekt til teknikken sitter.','Brystpress med manualer':'Ligg stødig på benken. Senk manualene kontrollert mot siden av brystet og press dem opp igjen.','Skulderpress':'Sitt eller stå stødig. Start med manualene ved skuldrene og press opp uten å svaie i ryggen.','Bicepscurl':'Hold albuene nær kroppen. Bøy armene rolig opp og senk kontrollert uten å svinge.','Tricepspress med manual':'Hold én manual med begge hender. Bøy albuene og senk vekten bak hodet, press opp igjen. Stopp hvis skulderen blir irritert.','Sidehev':'Bruk lette manualer. Løft armene kontrollert ut til siden til omtrent skulderhøyde.','Dead bug':'Ligg på ryggen. Hold magen stabil og før motsatt arm og bein rolig ut. Beveg bare så langt korsryggen kan holdes stabil.','Sideplanke':'Støtt deg på underarm og knær eller føtter. Hold kroppen i en rett linje og spenn magen lett.'};
 function exerciseCard(e,i){let k=`${state.week}-${state.session}-${i}`,saved=lastWeight(e.n),checks=state.setChecks[k]||[];return `<div class="card exercise"><h3>${i+1}. ${e.n}</h3><div class="muted">${e.sets} × ${e.reps} · ${e.area}</div><div class="weight"><label>Vekt</label><input type="number" step="0.5" min="0" value="${saved}" placeholder="kg" onchange="setWeight('${e.n}',this.value)"></div><div class="sets">${Array.from({length:e.sets},(_,j)=>`<button class="set ${checks[j]?'done':''}" onclick="toggleSet('${k}',${j},this)">Sett ${j+1}</button>`).join('')}</div><div class="muted" style="margin-top:8px">Sist registrert: ${saved?saved+' kg':'ikke registrert'}</div><div class="tip"><b>Slik gjør du:</b> ${tips[e.n]||'Bruk rolig og kontrollert bevegelse.'}</div></div>`}
 function setWeight(n,v){if(v==='')delete state.weights[n];else state.weights[n]=Number(v);save()}
 function toggleSet(k,j,el){state.setChecks[k]=state.setChecks[k]||[];state.setChecks[k][j]=!state.setChecks[k][j];el.classList.toggle('done');save()}
